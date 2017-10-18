@@ -1,6 +1,7 @@
 
 import sklearn
 import keras
+
 from keras.models import Model, Sequential
 from keras.layers import Dense, Flatten, Lambda,\
         Convolution2D, MaxPooling2D , Cropping2D,\
@@ -13,10 +14,12 @@ from sklearn.model_selection import train_test_split
 import cv2
 import numpy as np
 
-def generator(samples, batch_size=32):
+def generator(samples, data_dir = "data/", batch_size=32):
     """
     The real batch_size is batch_size * 2, because of image flip
     """
+    if data_dir is None:
+        data_dir = "data/"
     num_samples = len(samples)
     while True:
         samples = shuffle(samples)
@@ -27,7 +30,7 @@ def generator(samples, batch_size=32):
             for index, row in batch_samples.iterrows():
                 center_image, left_image, right_image = row['center'], row['left'], row['right']
                 steering = row['steering']
-                file_path = "data/" + center_image
+                file_path = data_dir + center_image
                 orig_image = cv2.imread(file_path)
                 
                 image = cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB)
@@ -35,12 +38,12 @@ def generator(samples, batch_size=32):
                 images.append(image)
                 angles.append(measurement)
                 # use left and right image
-                left_image_path = "data/" + left_image.strip()
+                left_image_path = data_dir + left_image.strip()
                 orig_left_image = cv2.imread(left_image_path)
                 left_image_content = cv2.cvtColor(orig_left_image, cv2.COLOR_BGR2RGB)
                 images.append(left_image_content)
                 angles.append(measurement + 0.2)
-                right_image_path = "data/" + right_image.strip()
+                right_image_path = data_dir + right_image.strip()
                 orig_right_image = cv2.imread(right_image_path)
                 right_image_content = cv2.cvtColor(orig_right_image, cv2.COLOR_BGR2RGB)
                 images.append(right_image_content)
@@ -52,20 +55,27 @@ def generator(samples, batch_size=32):
             outputs = np.array(angles)
             yield shuffle(inputs, outputs)
 
-def load_example_datasets(drive_log_path = "data/driving_log.csv", batch_size = 32):
-    logs = pd.read_csv(drive_log_path)
-    # collected training data for special case
-    augment_logs = pd.read_csv("data/driving_log_augment.csv", header = 0, names = ["center","left","right",
-            "steering","throttle","brake","speed"])
-    # anothor collected training data for special case
-    augment_logs3 = pd.read_csv("data/driving_log_augment3.csv", header = 0, names = ["center","left","right",
-            "steering","throttle","brake","speed"])
-    merge_logs = pd.concat([logs, augment_logs, augment_logs3], ignore_index=True)
-    train_examples, valid_examples =  train_test_split(merge_logs)
+def load_example_datasets(training_dir = None, batch_size = 32):
+    if training_dir is None:
+        logs = pd.read_csv("data/driving_log.csv")
+        # collected training data for special case
+        augment_logs = pd.read_csv("data/driving_log_augment.csv", header = 0, names = ["center","left","right",
+                "steering","throttle","brake","speed"])
+        # anothor collected training data for special case
+        augment_logs3 = pd.read_csv("data/driving_log_augment3.csv", header = 0, names = ["center","left","right",
+                "steering","throttle","brake","speed"])
+        total_logs = pd.concat([logs, augment_logs, augment_logs3], ignore_index=True)
+    elif type(training_dir) is str:
+        logs = pd.read_csv(training_dir + "driving_log.csv", header = 0, names = ["center","left","right",
+                "steering","throttle","brake","speed"])
+        total_logs = logs
+    else:
+        raise ValueError("drive_log_path is wrong")
+    train_examples, valid_examples =  train_test_split(total_logs)
     len_train = len(train_examples) 
     len_valid = len(valid_examples)
-    train_gen = generator(train_examples, batch_size = batch_size)
-    valid_gen = generator(valid_examples, batch_size = batch_size)
+    train_gen = generator(train_examples, data_dir = training_dir, batch_size = batch_size)
+    valid_gen = generator(valid_examples, data_dir = training_dir, batch_size = batch_size)
     print ("origin train exmples num: %d" % len_train)
     print ("origin valid exmples num: %d" % len_valid)
     return train_gen, valid_gen, len_train, len_valid
@@ -87,16 +97,27 @@ def create_model(input_shape = (160, 320, 3)):
     model.summary()
     return model
 
-def train(train_gen, valid_gen, model, len_train, len_valid):
+def train(train_gen, valid_gen, model, len_train, len_valid, dump_file, pretrain = None, epochs = 5):
+    if pretrain is not None:
+        model.load_weights(pretrain)
     model.fit_generator(generator= train_gen, samples_per_epoch= len_train,
-            nb_epoch=5, validation_data=valid_gen, nb_val_samples = len_valid)
-    model.save("model.h5")
-    print ('model saved.')
+            nb_epoch=epochs, validation_data=valid_gen, nb_val_samples = len_valid)
+    model.save(dump_file)
+    print ('model saved to %s.' % dump_file)
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='Behavioral cloning.')
+    parser.add_argument('--pretrain', default=None, help='pretrain parameters file')
+    parser.add_argument('--training_dir', default=None, help='training features dir')
+    parser.add_argument('--dump_file', default="model2.h5", help='model parameters dumping file')
+    parser.add_argument('--epochs', default=5, type=int, help="training number")
+
+    args = parser.parse_args()
     from keras import backend as K
     print ( "keras version:" + keras.__version__)
-    train_gen,valid_gen, len_train, len_valid = load_example_datasets()
+    train_gen,valid_gen, len_train, len_valid = load_example_datasets(training_dir = args.training_dir)
     model = create_model()
-    train(train_gen, valid_gen, model, len_train * 4, len_valid *4)
+    train(train_gen, valid_gen, model, len_train * 4, len_valid *4,\
+            dump_file = args.dump_file, pretrain = args.pretrain, epochs = args.epochs)
     K.clear_session() # fix Keras 1.2.1 exits issue
