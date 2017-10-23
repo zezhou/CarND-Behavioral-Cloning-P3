@@ -37,7 +37,8 @@ def generator(samples, data_dir = "data/", batch_size=32):
                 measurement = float(steering)
                 images.append(image)
                 angles.append(measurement)
-                # use left and right image
+
+                # use left and right image for data augmenting
                 left_image_path = data_dir + left_image.strip()
                 orig_left_image = cv2.imread(left_image_path)
                 left_image_content = cv2.cvtColor(orig_left_image, cv2.COLOR_BGR2RGB)
@@ -45,12 +46,17 @@ def generator(samples, data_dir = "data/", batch_size=32):
                 angles.append(measurement + 0.2)
                 right_image_path = data_dir + right_image.strip()
                 orig_right_image = cv2.imread(right_image_path)
+                #from project guid, I found a comments says that drive.py sends RGB images to the model;
+                #cv2.imread() reads images in BGR format
+                #using following code to fix this problem
                 right_image_content = cv2.cvtColor(orig_right_image, cv2.COLOR_BGR2RGB)
                 images.append(right_image_content)
                 angles.append(measurement - 0.2)
-                # Flipping
+
+                # Flipping for data augmenting
                 images.append(cv2.flip(image,1))
                 angles.append(measurement*-1.0)
+
             inputs = np.array(images)
             outputs = np.array(angles)
             yield shuffle(inputs, outputs)
@@ -58,10 +64,10 @@ def generator(samples, data_dir = "data/", batch_size=32):
 def load_example_datasets(training_dir = None, batch_size = 32):
     if training_dir is None:
         logs = pd.read_csv("data/driving_log.csv")
-        # collected training data for special case
+        # collected training data for special cases
         augment_logs = pd.read_csv("data/driving_log_augment.csv", header = 0, names = ["center","left","right",
                 "steering","throttle","brake","speed"])
-        # anothor collected training data for special case
+        # anothor collected training data for special cases
         augment_logs3 = pd.read_csv("data/driving_log_augment3.csv", header = 0, names = ["center","left","right",
                 "steering","throttle","brake","speed"])
         total_logs = pd.concat([logs, augment_logs, augment_logs3], ignore_index=True)
