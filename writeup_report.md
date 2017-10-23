@@ -42,12 +42,12 @@ The model.py file contains the code for training and saving the convolution neur
 
 #### 1. An appropriate model architecture has been employed
 
-My model consists of two convolution neural network with 3x3 filter sizes and depths 12 (model.py lines 93,95). The model also includes two Max Pooling with 2x2 filter and 2x2 strides(model.py lines 94,96).
+My model consists of two convolution neural network with `3x3 filter sizes and depths 12` (model.py lines 93,95). The model also includes two `Max Pooling with 2x2 filter and 2x2 strides`(model.py lines 94,96).
 
-The model includes RELU layers to introduce nonlinearity (code line 90, 92, 95), and the data is normalized in the model using a Keras lambda layer (code line 88). Besides, The training images is cropping before training (code line 92). The model also includes Batch Normalization (code line 99) to accelerate training. 
+The model includes RELU layers to introduce nonlinearity (code line 90, 92, 95), and the data is `normalized` in the model using a Keras lambda layer (code line 88). Besides, The training images is `cropping` before training (code line 92). The model also includes `Batch Normalization` (code line 99) to accelerate training. 
 
 #### 2. Attempts to reduce overfitting in the model
-The model contains dropout layers in order to reduce overfitting (model.py lines 100). The dropout rate is set to 50%. 
+The model contains dropout layers in order to reduce overfitting (model.py lines 100). The dropout rate is set to `50%`. 
 
 The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 80). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
@@ -67,7 +67,7 @@ For details about how I created the training data, see the next section.
 
 The overall strategy for deriving a model architecture was to balance model capacity and training speed in my laptop. 
 
-My first step was to use a convolution neural network model similar to the vgg. I thought this model might be appropriate because it has good capacity and fast to train.
+My first step was to use a convolution neural network model similar to the `vgg`. I thought this model might be appropriate because it has good capacity and fast to train.
 
 In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
 
@@ -108,7 +108,7 @@ To capture good driving behavior, I first recorded two laps on track one using c
 [center_image]: ./examples/center_2017_10_17_18_40_24_650.jpg "center image"
 ![center imgage][center_image]
 
-I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to back to the track. These images show what a recovery looks like starting from left to center and right to center :
+I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to back to the track. These images show what a recovery looks like starting from left to center and from right to center :
 
 [left_to_center_image]: ./examples/left_2017_10_17_18_40_24_650.jpg "left to center image"
 [right_to_center_image]: ./examples/right_2017_10_17_18_40_24_650.jpg "right to center image"
@@ -120,12 +120,12 @@ Then I repeated this process on track two in order to get more data points.
 
 To augment the data sat, I also flipped images and angles thinking that this would increase the number of training samples to make model more robust. For example, here is an image that has then been flipped:
 
-[flip_image]: center_2017_10_17_18_40_24_650_flip.jpg "flip image"
+[flip_image]: ./examples/center_2017_10_17_18_40_24_650_flip.jpg "flip image"
 
 ![flip image][flip_image]
 
-After the collection process, I had *24108* number of data points. I then preprocessed this data by normalizing and cropping.
+After the collection process, I had `24108` number of data points. I then preprocessed this data by normalizing and cropping.
 
-I finally randomly shuffled the data set and put *25%* of the data into a validation set. 
+I finally randomly shuffled the data set and put `25%` of the data into a validation set. 
 
 I used this training data for training the model. The validation set helped determine if the model was over or under fitting. The ideal number of epochs was 5 as evidenced by the mse of validation is increasing after 6 epochs. I used an adam optimizer so that manually training the learning rate wasn't necessary.
