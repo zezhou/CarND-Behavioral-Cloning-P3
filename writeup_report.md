@@ -120,7 +120,7 @@ Then I repeated this process on track two in order to get more data points.
 
 To augment the data sat, I also flipped images and angles thinking that this would increase the number of training samples to make model more robust. For example, here is an image that has then been flipped:
 
-[flip_image]: ./examples/center_2017_10_17_18_40_24_650_flip.jpg "flip image"
+[flip_image]: ./examples/center_2017_10_17_18_40_24_650_flip.png "flip image"
 
 ![flip image][flip_image]
 
